@@ -1,5 +1,6 @@
 # waikanstore
 上传自己的外刊资料信息
+![alt text](image.png)
 # 外刊库 (E-Magazines Library)
 
 基于 React + TypeScript + Node.js 构建的现代化外刊管理和展示系统。
