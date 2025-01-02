@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "title": "The Wall Street Journal 2025年1月2日",
+    "description": "华尔街日报PDF免费下载",
+    "coverUrl": "/images/newspapers/wsj-cover.jpg",
+    "category": "newspapers",
+    "publishDate": "2025-01-02",
+    "isFreeTrial": true
+  },
+  {
+    "id": "2",
+    "title": "Australian Geographic January/February 2025",
+    "description": "澳大利亚地理杂志",
+    "coverUrl": "/images/magazines/ag-cover.jpg",
+    "category": "magazines",
+    "publishDate": "2025-01-02",
+    "isFreeTrial": true
+  }
+] 
