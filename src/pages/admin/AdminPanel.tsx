@@ -8,7 +8,7 @@ import { api } from '../../services/api';
 const { Option } = Select;
 
 interface AdminPanelProps {
-  onAddMagazine: (magazine: any) => void;
+  onAddMagazine: (magazine: FormData) => Promise<Magazine>;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
@@ -55,13 +55,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
   // 处理编辑
   const handleEdit = (record: Magazine) => {
     setEditingMagazine(record);
-    setShowAddForm(true); // 显示模态框
+    setShowAddForm(true);
+    
     form.setFieldsValue({
       title: record.title,
       description: record.description,
       category: record.category,
       publishDate: record.publishDate,
-      isFreeTrial: record.isFreeTrial
+      isFreeTrial: Boolean(record.isFreeTrial),
+      downloadUrl: record.downloadUrl || '',
+      isVip: Boolean(record.isVip)
     });
   };
 
@@ -112,39 +115,53 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
 
   // 处理表单提交
   const handleSubmit = async (values: any) => {
-    if (fileList.length === 0 && !editingMagazine) {
-      message.error('请选择封面图片');
-      return;
-    }
-
-    const formData = new FormData();
-    Object.keys(values).forEach(key => {
-      if (values[key] !== undefined) {
-        formData.append(key, values[key].toString());
-      }
-    });
-
-    if (fileList[0]?.originFileObj) {
-      formData.append('cover', fileList[0].originFileObj);
-    } else if (editingMagazine) {
-      // 如果是编辑模式且没有新图片，保留原有图片URL
-      formData.append('coverUrl', editingMagazine.coverUrl);
-    }
-
     try {
-      if (editingMagazine) {
-        await api.updateMagazine(editingMagazine.id, formData);
-        message.success('更新成功');
-      } else {
-        await onAddMagazine(formData);
-        message.success('添加成功');
+      if (fileList.length === 0 && !editingMagazine) {
+        message.error('请选择封面图片');
+        return;
       }
-      
-      setShowAddForm(false);
-      setEditingMagazine(null);
-      form.resetFields();
-      setFileList([]);
-      loadMagazines(); // 重新加载列表
+
+      const formData = new FormData();
+
+      // 处理表单值
+      for (const [key, value] of Object.entries(values)) {
+        if (value === undefined) continue;
+
+        if (key === 'isFreeTrial' || key === 'isVip') {
+          formData.append(key, value ? 'true' : 'false');
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+
+      // 处理文件上传
+      if (fileList[0]?.originFileObj) {
+        formData.append('cover', fileList[0].originFileObj);
+      } else if (editingMagazine) {
+        formData.append('coverUrl', editingMagazine.coverUrl);
+      }
+
+      // 发送请求
+      if (editingMagazine) {
+        const response = await api.updateMagazine(editingMagazine.id, formData);
+        if (response) {
+          message.success('更新成功');
+          setShowAddForm(false);
+          setEditingMagazine(null);
+          form.resetFields();
+          setFileList([]);
+          await loadMagazines();
+        }
+      } else {
+        const response = await onAddMagazine(formData);
+        if (response) {
+          message.success('添加成功');
+          setShowAddForm(false);
+          form.resetFields();
+          setFileList([]);
+          await loadMagazines();
+        }
+      }
     } catch (error) {
       console.error('Error:', error);
       message.error(editingMagazine ? '更新失败' : '添加失败');
@@ -189,6 +206,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
+          initialValues={{
+            isFreeTrial: false,
+            isVip: false,
+            downloadUrl: ''
+          }}
         >
           <Form.Item
             name="title"
@@ -231,6 +253,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
           <Form.Item
             name="isFreeTrial"
             label="是否免费"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+
+          <Form.Item
+            name="downloadUrl"
+            label="下载链接"
+          >
+            <Input placeholder="请输入下载链接" />
+          </Form.Item>
+
+          <Form.Item
+            name="isVip"
+            label="VIP内容"
             valuePropName="checked"
           >
             <Switch />

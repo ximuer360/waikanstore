@@ -5,10 +5,12 @@ import Header from './components/Header';
 import Home from './pages/Home';
 import MagazineDetail from './pages/MagazineDetail';
 import AdminPanel from './pages/admin/AdminPanel';
+import CategoryPage from './pages/CategoryPage';
+import AdminRoute from './components/AdminRoute';
 import { Magazine } from './types/magazine';
 import { api } from './services/api';
 import './styles/global.css';
-import CategoryPage from './pages/CategoryPage';
+import LoginPage from './pages/admin/LoginPage';
 
 const { Content, Footer } = Layout;
 
@@ -20,9 +22,7 @@ function App() {
   const loadMagazines = async () => {
     try {
       setLoading(true);
-      console.log('Loading magazines...');
       const data = await api.getAllMagazines();
-      console.log('Loaded magazines:', data);
       setMagazines(data);
       setError(null);
     } catch (err) {
@@ -37,6 +37,12 @@ function App() {
     loadMagazines();
   }, []);
 
+  const updateMagazines = async (formData: FormData): Promise<Magazine> => {
+    const newMagazine = await api.addMagazine(formData);
+    setMagazines(prev => [...prev, newMagazine]);
+    return newMagazine;
+  };
+
   if (loading) {
     return <div style={{ padding: '20px', textAlign: 'center' }}>加载中...</div>;
   }
@@ -44,15 +50,6 @@ function App() {
   if (error) {
     return <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>{error}</div>;
   }
-
-  if (!magazines || magazines.length === 0) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>暂无数据</div>;
-  }
-
-  const updateMagazines = async (formData: FormData) => {
-    const newMagazine = await api.addMagazine(formData);
-    setMagazines([...magazines, newMagazine]);
-  };
 
   return (
     <Router>
@@ -63,11 +60,19 @@ function App() {
             <Route path="/" element={<Home magazines={magazines} onUpdate={loadMagazines} />} />
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/magazine/:id" element={<MagazineDetail />} />
-            <Route path="/admin" element={<AdminPanel onAddMagazine={updateMagazines} />} />
+            <Route path="/admin/login" element={<LoginPage />} />
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute 
+                  element={<AdminPanel onAddMagazine={updateMagazines} />} 
+                />
+              } 
+            />
           </Routes>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          外刊库 ©{new Date().getFullYear()} Created by Your Name
+          外刊库 ©{new Date().getFullYear()} Created by 西木训练营
         </Footer>
       </Layout>
     </Router>

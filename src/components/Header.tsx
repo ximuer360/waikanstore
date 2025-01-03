@@ -8,30 +8,32 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   const menuItems = [
-    { key: '/', label: '首页', path: '/' },
-    { key: '/category/newspapers', label: '期刊报纸', path: '/category/newspapers' },
-    { key: '/category/magazines', label: '人文地理', path: '/category/magazines' },
-    { key: '/category/business', label: '商业财经', path: '/category/business' },
-    { key: '/category/entertainment', label: '娱乐时尚', path: '/category/entertainment' },
-    { key: '/category/ebooks', label: '电子书资源', path: '/category/ebooks' },
-    { key: '/admin', label: '管理后台', path: '/admin' }
+    { key: '/', label: '首页' },
+    { key: '/category/newspapers', label: '英文报纸' },
+    { key: '/category/magazines', label: '人文地理' },
+    { key: '/category/business', label: '商业财经' },
+    { key: '/category/entertainment', label: '娱乐时尚' },
+    { key: '/category/ebooks', label: '电子书资源' }
   ];
 
   return (
     <AntHeader style={{ position: 'fixed', zIndex: 1, width: '100%', background: '#fff' }}>
-      <div style={{ float: 'left', marginRight: 50 }}>
-        <Link to="/" style={{ color: '#000', fontSize: '18px' }}>
+      <div className="logo" style={{ float: 'left', marginRight: '24px' }}>
+        <Link to="/" style={{ color: '#1890ff', fontSize: '18px', fontWeight: 'bold' }}>
           外刊库
         </Link>
       </div>
       <Menu
+        theme="light"
         mode="horizontal"
         selectedKeys={[location.pathname]}
-        items={menuItems.map(item => ({
-          key: item.path,
-          label: <Link to={item.path}>{item.label}</Link>
-        }))}
-      />
+      >
+        {menuItems.map(item => (
+          <Menu.Item key={item.key}>
+            <Link to={item.key}>{item.label}</Link>
+          </Menu.Item>
+        ))}
+      </Menu>
     </AntHeader>
   );
 };

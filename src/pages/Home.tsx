@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Row, Col, Card, Tag, Input, Pagination, message } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Tag, Input, Pagination, message, Modal, Image } from 'antd';
+import { SearchOutlined, DownloadOutlined, CrownOutlined } from '@ant-design/icons';
 import { Magazine } from '../types/magazine';
 import { api } from '../services/api';
+import VipQRCodeModal from '../components/VipQRCodeModal';
 
 const { Meta } = Card;
 const { Search } = Input;
@@ -12,6 +13,7 @@ const PAGE_SIZE = 12; // 每页显示12个项目 (4列 x 3行)
 const Home: React.FC<{ magazines: Magazine[], onUpdate: () => void }> = ({ magazines, onUpdate }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState('');
+  const [vipModalVisible, setVipModalVisible] = useState(false);
 
   // 处理搜索
   const filteredMagazines = magazines.filter(magazine => 
@@ -36,6 +38,15 @@ const Home: React.FC<{ magazines: Magazine[], onUpdate: () => void }> = ({ magaz
     return `http://localhost:5001${coverUrl}`;
   };
 
+  const handleDownload = (url: string | undefined) => {
+    if (!url) {
+      message.error('下载链接不可用');
+      return;
+    }
+    navigator.clipboard.writeText(url);
+    message.success('下载链接已复制到剪贴板');
+  };
+
   return (
     <div className="home-container">
       {/* 搜索栏 */}
@@ -55,22 +66,40 @@ const Home: React.FC<{ magazines: Magazine[], onUpdate: () => void }> = ({ magaz
               className="magazine-card"
               cover={
                 <div className="magazine-cover-container">
-                  <img 
-                    alt={magazine.title} 
+                  <Image
+                    alt={magazine.title}
                     src={getImageUrl(magazine.coverUrl)}
                     onError={handleImageError}
                     className="magazine-cover-image"
+                    preview={{
+                      mask: '点击查看大图'
+                    }}
                   />
                 </div>
               }
             >
-              <Meta
-                title={magazine.title}
-                /* description={magazine.description}*/
-              />
+              <Meta title={magazine.title} />
               <div style={{ marginTop: 12 }}>
                 <Tag color="blue">{magazine.category}</Tag>
-                {magazine.isFreeTrial && <Tag color="green">免费下载</Tag>}
+                {magazine.isVip ? (
+                  <Tag 
+                    color="gold" 
+                    icon={<CrownOutlined />}
+                    onClick={() => setVipModalVisible(true)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    VIP
+                  </Tag>
+                ) : magazine.isFreeTrial && magazine.downloadUrl ? (
+                  <Tag 
+                    color="green" 
+                    icon={<DownloadOutlined />}
+                    onClick={() => handleDownload(magazine.downloadUrl)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    免费下载
+                  </Tag>
+                ) : null}
               </div>
             </Card>
           </Col>
@@ -90,6 +119,11 @@ const Home: React.FC<{ magazines: Magazine[], onUpdate: () => void }> = ({ magaz
           />
         </div>
       )}
+
+      <VipQRCodeModal 
+        visible={vipModalVisible}
+        onClose={() => setVipModalVisible(false)}
+      />
     </div>
   );
 };

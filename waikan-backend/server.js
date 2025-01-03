@@ -19,6 +19,8 @@ db.exec(`
     category TEXT,
     publishDate TEXT,
     isFreeTrial INTEGER DEFAULT 0,
+    downloadUrl TEXT,
+    isVip INTEGER DEFAULT 0,
     createdAt TEXT DEFAULT CURRENT_TIMESTAMP
   );
 `);
@@ -26,21 +28,41 @@ db.exec(`
 // 配置文件上传
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    console.log('Upload request body:', req.body);
     const category = req.body.category || 'default';
     const dir = path.join(__dirname, 'public', 'images', category);
     require('fs').mkdirSync(dir, { recursive: true });
-    console.log('Created directory:', dir);
     cb(null, dir);
   },
   filename: function (req, file, cb) {
-    const filename = Date.now() + '_' + file.originalname;
-    console.log('Generated filename:', filename);
-    cb(null, filename);
+    // 保留原始文件名，但添加时间戳前缀以避免重名
+    const timestamp = Date.now();
+    // 获取文件扩展名
+    const ext = path.extname(file.originalname);
+    // 获取文件名（不含扩展名）
+    const nameWithoutExt = path.basename(file.originalname, ext);
+    // 组合新文件名：原文件名_时间戳.扩展名
+    const newFilename = `${nameWithoutExt}_${timestamp}${ext}`;
+    
+    // 确保文件名是合法的
+    const safeFilename = newFilename.replace(/[^a-zA-Z0-9-_\.]/g, '_');
+    
+    console.log('Original filename:', file.originalname);
+    console.log('Safe filename:', safeFilename);
+    
+    cb(null, safeFilename);
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    // 检查文件类型
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+      return cb(new Error('只允许上传图片文件！'));
+    }
+    cb(null, true);
+  }
+});
 
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -124,7 +146,15 @@ app.get('/api/magazines/:id', (req, res) => {
 app.put('/api/magazines/:id', upload.single('cover'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, category, publishDate, isFreeTrial } = req.body;
+    const { 
+      title, 
+      description, 
+      category, 
+      publishDate, 
+      isFreeTrial,
+      downloadUrl,
+      isVip
+    } = req.body;
     
     let coverUrl = req.body.coverUrl;
     if (req.file) {
@@ -146,7 +176,7 @@ app.put('/api/magazines/:id', upload.single('cover'), async (req, res) => {
       db.run(
         `UPDATE magazines 
          SET title = ?, description = ?, coverUrl = ?, category = ?, 
-             publishDate = ?, isFreeTrial = ?
+             publishDate = ?, isFreeTrial = ?, downloadUrl = ?, isVip = ?
          WHERE id = ?`,
         [
           title,
@@ -155,6 +185,8 @@ app.put('/api/magazines/:id', upload.single('cover'), async (req, res) => {
           category,
           publishDate,
           isFreeTrial === 'true' ? 1 : 0,
+          downloadUrl || null,
+          isVip === 'true' ? 1 : 0,
           id
         ],
         function(err) {
@@ -264,7 +296,15 @@ app.post('/api/magazines', upload.single('cover'), (req, res) => {
     console.log('Received files:', req.file);
     console.log('Received body:', req.body);
 
-    const { title, description, category, publishDate, isFreeTrial } = req.body;
+    const { 
+      title, 
+      description, 
+      category, 
+      publishDate, 
+      isFreeTrial,
+      downloadUrl,
+      isVip 
+    } = req.body;
     
     if (!req.file) {
       throw new Error('No file uploaded');
@@ -274,8 +314,11 @@ app.post('/api/magazines', upload.single('cover'), (req, res) => {
     const id = Date.now().toString();
     
     const stmt = db.prepare(`
-      INSERT INTO magazines (id, title, description, coverUrl, category, publishDate, isFreeTrial)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO magazines (
+        id, title, description, coverUrl, category, 
+        publishDate, isFreeTrial, downloadUrl, isVip
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -286,6 +329,8 @@ app.post('/api/magazines', upload.single('cover'), (req, res) => {
       category,
       publishDate,
       isFreeTrial === 'true' ? 1 : 0,
+      downloadUrl || null,
+      isVip === 'true' ? 1 : 0,
       function(err) {
         if (err) {
           console.error('Database error:', err);
@@ -300,7 +345,9 @@ app.post('/api/magazines', upload.single('cover'), (req, res) => {
           coverUrl,
           category,
           publishDate,
-          isFreeTrial: isFreeTrial === 'true' ? 1 : 0
+          isFreeTrial: isFreeTrial === 'true' ? 1 : 0,
+          downloadUrl: downloadUrl || null,
+          isVip: isVip === 'true' ? 1 : 0
         });
       }
     );

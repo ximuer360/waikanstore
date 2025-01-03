@@ -33,8 +33,8 @@
 }
 
 .magazine-cover-image {
-  width: 329px;
-  height: 320px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -126,4 +126,29 @@
   margin-bottom: 32px;
   font-size: 24px;
   color: #333;
+}
+
+/* 添加图片预览相关样式 */
+.ant-image {
+  width: 100%;
+  height: 100%;
+}
+
+.ant-image-mask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #fff;
+}
+
+.ant-image-preview {
+  z-index: 1050;
+}
+
+/* 优化预览图片的样式 */
+.ant-image-preview-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
 } 

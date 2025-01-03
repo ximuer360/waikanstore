@@ -5,5 +5,8 @@ export interface Magazine {
   coverUrl: string;
   category: string;
   publishDate: string;
-  isFreeTrial: boolean;
+  isFreeTrial: number;
+  downloadUrl?: string;
+  isVip: number;
+  createdAt: string;
 } 
