@@ -2,15 +2,20 @@ import React from 'react';
 import { Form, Input, Button, Card, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
+const ADMIN_PASSWORD = 'admin123'
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   const onFinish = (values: { password: string }) => {
-    // 临时使用硬编码的密码进行测试
-    const ADMIN_PASSWORD = 'admin123';
-    
-    if (values.password === ADMIN_PASSWORD) {
+    const envKey = process.env.REACT_APP_ADMIN_KEY;
+    console.log('Login attempt:', { 
+      entered: values.password, 
+      expected: envKey 
+    });
+
+    if (values.password === envKey) {
       localStorage.setItem('adminKey', values.password);
+      localStorage.setItem('adminLoginTime', Date.now().toString());
       message.success('登录成功');
       navigate('/admin');
     } else {
@@ -18,12 +23,15 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  // 检查是否已登录
   React.useEffect(() => {
-    console.log('Environment variables:', {
-      REACT_APP_ADMIN_KEY: process.env.REACT_APP_ADMIN_KEY,
-      NODE_ENV: process.env.NODE_ENV
-    });
-  }, []);
+    const adminKey = localStorage.getItem('adminKey');
+    const envKey = process.env.REACT_APP_ADMIN_KEY;
+    
+    if (adminKey === envKey) {
+      navigate('/admin');
+    }
+  }, [navigate]);
 
   return (
     <div style={{ 

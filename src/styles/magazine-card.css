@@ -1,0 +1,37 @@
+.magazine-card .ant-card-meta-title {
+  height: 4.5em;  /* 3行的高度 */
+  line-height: 1.5em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;  /* 限制3行 */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  margin-bottom: 0 !important;
+}
+
+/* 当标题内容少于3行时，垂直居中显示 */
+.magazine-card .ant-card-meta {
+  display: flex;
+  align-items: center;
+  min-height: 4.5em;  /* 确保最小高度为3行 */
+}
+
+.magazine-card .ant-card-meta-detail {
+  width: 100%;
+}
+
+.magazine-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.magazine-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.magazine-card .ant-card-meta {
+  flex: 1;
+} 

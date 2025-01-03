@@ -1,20 +1,13 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
+import { getMenuItems } from '../config/categories';
 
 const { Header: AntHeader } = Layout;
 
 const Header: React.FC = () => {
   const location = useLocation();
-
-  const menuItems = [
-    { key: '/', label: '首页' },
-    { key: '/category/newspapers', label: '英文报纸' },
-    { key: '/category/magazines', label: '人文地理' },
-    { key: '/category/business', label: '商业财经' },
-    { key: '/category/entertainment', label: '娱乐时尚' },
-    { key: '/category/ebooks', label: '电子书资源' }
-  ];
+  const menuItems = getMenuItems();
 
   return (
     <AntHeader style={{ position: 'fixed', zIndex: 1, width: '100%', background: '#fff' }}>

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-// 简单的管理员验证
 const isAdmin = () => {
   const adminKey = localStorage.getItem('adminKey');
-  return adminKey === process.env.REACT_APP_ADMIN_KEY;
+  const envKey = process.env.REACT_APP_ADMIN_KEY;
+  console.log('Checking admin access:', { adminKey, envKey });
+  return adminKey === envKey;
 };
 
 interface AdminRouteProps {
@@ -12,7 +13,10 @@ interface AdminRouteProps {
 }
 
 const AdminRoute: React.FC<AdminRouteProps> = ({ element }) => {
-  return isAdmin() ? element : <Navigate to="/" replace />;
+  if (!isAdmin()) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  return element;
 };
 
 export default AdminRoute; 

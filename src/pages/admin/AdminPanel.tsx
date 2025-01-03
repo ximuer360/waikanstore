@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Form, Input, Upload, Select, Switch, Button, message, Table, Space, Modal, Popconfirm } from 'antd';
-import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined, LogoutOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import { Magazine } from '../../types/magazine';
 import { api } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { getCategoryOptions, CategoryOption, getCategoryLabel } from '../../config/categories';
 
 const { Option } = Select;
 
@@ -18,6 +20,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMagazine, setEditingMagazine] = useState<Magazine | null>(null);
+  const navigate = useNavigate();
 
   // 加载杂志列表
   const loadMagazines = async () => {
@@ -79,11 +82,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
       title: '分类',
       dataIndex: 'category',
       key: 'category',
+      render: (category: string) => getCategoryLabel(category)
     },
     {
       title: '发布日期',
       dataIndex: 'publishDate',
       key: 'publishDate',
+      render: (date: string) => new Date(date).toLocaleDateString()
     },
     {
       title: '操作',
@@ -113,7 +118,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
     },
   ];
 
-  // 处理表单提交
+  // 添加文件重命名函数
+  const getFormattedFileName = (file: File, category: string) => {
+    const date = new Date();
+    const timestamp = date.getTime();
+    const extension = file.name.split('.').pop();
+    // 格式：category_YYYYMMDD_timestamp.extension
+    return `${category}_${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${timestamp}.${extension}`;
+  };
+
+  // 修改表单提交函数
   const handleSubmit = async (values: any) => {
     try {
       if (fileList.length === 0 && !editingMagazine) {
@@ -126,17 +140,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
       // 处理表单值
       for (const [key, value] of Object.entries(values)) {
         if (value === undefined) continue;
-
-        if (key === 'isFreeTrial' || key === 'isVip') {
-          formData.append(key, value ? 'true' : 'false');
-        } else {
-          formData.append(key, String(value));
-        }
+        formData.append(key, String(value));
       }
 
       // 处理文件上传
       if (fileList[0]?.originFileObj) {
-        formData.append('cover', fileList[0].originFileObj);
+        const file = fileList[0].originFileObj;
+        const newFileName = getFormattedFileName(file, values.category);
+        // 创建一个新的 File 对象，使用新的文件名
+        const renamedFile = new File([file], newFileName, { type: file.type });
+        formData.append('cover', renamedFile);
       } else if (editingMagazine) {
         formData.append('coverUrl', editingMagazine.coverUrl);
       }
@@ -166,6 +179,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
       console.error('Error:', error);
       message.error(editingMagazine ? '更新失败' : '添加失败');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminKey');
+    navigate('/admin/login');
   };
 
   return (
@@ -234,11 +252,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
             rules={[{ required: true, message: '请选择分类' }]}
           >
             <Select placeholder="请选择分类">
-              <Option value="newspapers">英文报纸</Option>
-              <Option value="magazines">人文地理</Option>
-              <Option value="business">商业财经</Option>
-              <Option value="entertainment">娱乐时尚</Option>
-              <Option value="ebooks">电子书资源</Option>
+              {getCategoryOptions().map(({ value, label }: CategoryOption) => (
+                <Option key={value} value={value}>
+                  {label}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
 
@@ -296,6 +314,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onAddMagazine }) => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <Button 
+        type="link" 
+        danger 
+        icon={<LogoutOutlined />}
+        onClick={handleLogout}
+      >
+        退出登录
+      </Button>
     </div>
   );
 };

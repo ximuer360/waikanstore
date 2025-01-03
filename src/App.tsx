@@ -57,9 +57,6 @@ function App() {
         <Header />
         <Content style={{ padding: '0', marginTop: 64 }}>
           <Routes>
-            <Route path="/" element={<Home magazines={magazines} onUpdate={loadMagazines} />} />
-            <Route path="/category/:category" element={<CategoryPage />} />
-            <Route path="/magazine/:id" element={<MagazineDetail />} />
             <Route path="/admin/login" element={<LoginPage />} />
             <Route 
               path="/admin" 
@@ -69,6 +66,9 @@ function App() {
                 />
               } 
             />
+            <Route path="/" element={<Home magazines={magazines} onUpdate={loadMagazines} />} />
+            <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/magazine/:id" element={<MagazineDetail />} />
           </Routes>
         </Content>
         <Footer style={{ textAlign: 'center' }}>

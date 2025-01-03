@@ -4,6 +4,8 @@ import { SearchOutlined, DownloadOutlined, CrownOutlined } from '@ant-design/ico
 import { Magazine } from '../types/magazine';
 import { api } from '../services/api';
 import VipQRCodeModal from '../components/VipQRCodeModal';
+import { getCategoryLabel } from '../config/categories';
+import '../styles/magazine-card.css';
 
 const { Meta } = Card;
 const { Search } = Input;
@@ -78,15 +80,28 @@ const Home: React.FC<{ magazines: Magazine[], onUpdate: () => void }> = ({ magaz
                 </div>
               }
             >
-              <Meta title={magazine.title} />
-              <div style={{ marginTop: 12 }}>
-                <Tag color="blue">{magazine.category}</Tag>
+              <Meta 
+                title={magazine.title}
+                className="magazine-title"
+              />
+              <div style={{ 
+                marginTop: 12, 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                color: '#999',
+                flexWrap: 'wrap'
+              }}>
+                <span style={{ fontSize: '12px' }}>
+                  {new Date(magazine.publishDate).toLocaleDateString()}
+                </span>
+                <span>/</span>
                 {magazine.isVip ? (
                   <Tag 
                     color="gold" 
                     icon={<CrownOutlined />}
                     onClick={() => setVipModalVisible(true)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', margin: 0 }}
                   >
                     VIP
                   </Tag>
@@ -95,11 +110,13 @@ const Home: React.FC<{ magazines: Magazine[], onUpdate: () => void }> = ({ magaz
                     color="green" 
                     icon={<DownloadOutlined />}
                     onClick={() => handleDownload(magazine.downloadUrl)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', margin: 0 }}
                   >
                     免费下载
                   </Tag>
                 ) : null}
+                <span>/</span>
+                <Tag color="blue" style={{ margin: 0 }}>{getCategoryLabel(magazine.category)}</Tag>
               </div>
             </Card>
           </Col>
