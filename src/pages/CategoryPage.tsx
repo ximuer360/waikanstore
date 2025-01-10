@@ -5,6 +5,7 @@ import { SearchOutlined, DownloadOutlined, CrownOutlined } from '@ant-design/ico
 import { Magazine } from '../types/magazine';
 import { api } from '../services/api';
 import VipQRCodeModal from '../components/VipQRCodeModal';
+import VipVerifyModal from '../components/VipVerifyModal';
 import { getCategoryLabel } from '../config/categories';
 
 const { Meta } = Card;
@@ -19,6 +20,8 @@ const CategoryPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState('');
   const [vipModalVisible, setVipModalVisible] = useState(false);
+  const [vipVerifyVisible, setVipVerifyVisible] = useState(false);
+  const [currentDownloadUrl, setCurrentDownloadUrl] = useState<string>('');
 
   useEffect(() => {
     loadMagazines();
@@ -50,13 +53,33 @@ const CategoryPage: React.FC = () => {
     return `http://localhost:5001${coverUrl}`;
   };
 
-  const handleDownload = (url: string | undefined) => {
+  const isVipUser = () => {
+    const vipKey = localStorage.getItem('vipKey');
+    return vipKey === process.env.REACT_APP_VIP_KEY;
+  };
+
+  const handleDownload = (url: string | undefined, isVipContent: boolean) => {
     if (!url) {
       message.error('下载链接不可用');
       return;
     }
+
+    if (isVipContent && !isVipUser()) {
+      setCurrentDownloadUrl(url);
+      setVipVerifyVisible(true);
+      return;
+    }
+
+    // 执行下载
     navigator.clipboard.writeText(url);
     message.success('下载链接已复制到剪贴板');
+  };
+
+  const handleVipVerifySuccess = () => {
+    if (currentDownloadUrl) {
+      navigator.clipboard.writeText(currentDownloadUrl);
+      message.success('下载链接已复制到剪贴板');
+    }
   };
 
   // 处理搜索
@@ -114,16 +137,16 @@ const CategoryPage: React.FC = () => {
                   <Tag 
                     color="gold" 
                     icon={<CrownOutlined />}
-                    onClick={() => setVipModalVisible(true)}
+                    onClick={() => handleDownload(magazine.downloadUrl, true)}
                     style={{ cursor: 'pointer', margin: 0 }}
                   >
-                    VIP
+                    VIP下载
                   </Tag>
                 ) : magazine.isFreeTrial && magazine.downloadUrl ? (
                   <Tag 
                     color="green" 
                     icon={<DownloadOutlined />}
-                    onClick={() => handleDownload(magazine.downloadUrl)}
+                    onClick={() => handleDownload(magazine.downloadUrl, false)}
                     style={{ cursor: 'pointer', margin: 0 }}
                   >
                     免费下载
@@ -153,6 +176,12 @@ const CategoryPage: React.FC = () => {
       <VipQRCodeModal 
         visible={vipModalVisible}
         onClose={() => setVipModalVisible(false)}
+      />
+
+      <VipVerifyModal 
+        visible={vipVerifyVisible}
+        onClose={() => setVipVerifyVisible(false)}
+        onVerifySuccess={handleVipVerifySuccess}
       />
     </div>
   );

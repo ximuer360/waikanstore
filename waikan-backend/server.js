@@ -360,6 +360,18 @@ app.post('/api/magazines', upload.single('cover'), (req, res) => {
   }
 });
 
+// 添加 VIP 密钥验证路由
+app.post('/api/verify-vip', (req, res) => {
+  const { key } = req.body;
+  
+  // 从配置或数据库中获取当前有效的 VIP 密钥
+  const validVipKey = process.env.VIP_KEY || 'vip123222';
+  
+  res.json({
+    valid: key === validVipKey
+  });
+});
+
 // 添加错误处理中间件
 app.use((err, req, res, next) => {
   // 确保不会发送 HTML 错误页面

@@ -81,5 +81,26 @@ export const api = {
       console.error('Error deleting magazine:', error);
       throw error;
     }
+  },
+
+  verifyVipKey: async (key: string): Promise<{ valid: boolean; expireTime?: number }> => {
+    try {
+      const response = await fetch(`${API_URL}/verify-vip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key })
+      });
+
+      if (!response.ok) {
+        throw new Error('验证失败');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('VIP验证错误:', error);
+      throw error;
+    }
   }
 }; 

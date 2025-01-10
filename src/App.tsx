@@ -11,6 +11,7 @@ import { Magazine } from './types/magazine';
 import { api } from './services/api';
 import './styles/global.css';
 import LoginPage from './pages/admin/LoginPage';
+import { clearVipStatus } from './utils/vip';
 
 const { Content, Footer } = Layout;
 
@@ -42,6 +43,20 @@ function App() {
     setMagazines(prev => [...prev, newMagazine]);
     return newMagazine;
   };
+
+  // 定期检查 VIP 状态
+  React.useEffect(() => {
+    const checkVipStatus = () => {
+      const expireTime = localStorage.getItem('vipKeyExpireTime');
+      if (expireTime && Date.now() > parseInt(expireTime)) {
+        clearVipStatus();
+      }
+    };
+
+    // 每小时检查一次
+    const interval = setInterval(checkVipStatus, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) {
     return <div style={{ padding: '20px', textAlign: 'center' }}>加载中...</div>;
